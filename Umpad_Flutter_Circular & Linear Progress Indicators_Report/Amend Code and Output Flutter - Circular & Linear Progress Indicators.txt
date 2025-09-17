@@ -1,0 +1,274 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(debugShowCheckedModeBanner: false, home: Loader());
+  }
+}
+
+class Loader extends StatefulWidget {
+  @override
+  _LoaderState createState() => _LoaderState(); // create state
+}
+
+class _LoaderState extends State<Loader> {
+  bool showCircular = false; // 🔹 for circular loader
+  bool showLinear = false; // 🔹 for linear loader
+
+  double _progressValue = 0.0; // for determinate example with zero(0) value
+  bool _loading = false; // to prevent multiple clicks
+
+  bool circularDone = false; // ✅ for circular loader
+  bool linearDone = false; // ✅ for linear loader
+
+  bool circulardownloadDone = false; // ✅ for circular download loader
+  bool lineardownloadDone = false; // ✅ for linear download loader
+
+  void _startProgress() {
+    setState(() {
+      _loading = true; // prevent multiple clicks
+      _progressValue = 0.0; // reset to zero each time
+    });
+
+    // Simulate a task that updates progress gradually
+    Future.doWhile(() async {
+      await Future.delayed(
+        Duration(milliseconds: 600),
+      ); // Adjust the duration as needed
+      setState(() {
+        _progressValue += 0.1; // Increment progress
+      });
+      return _progressValue < 1.0; // Continue until progress reaches 100%
+    }).then((_) {
+      setState(() {
+        _loading = false; // allow clicks again
+      });
+    });
+  }
+
+  // 🔹 Circular only
+  void _showCircularLoader(Duration duration) {
+    // e.g., Duration(seconds: 6, milliseconds: 500)
+    setState(() {
+      showCircular = true; // show loader
+      circularDone = false; // reset
+      circulardownloadDone = false; // reset
+    });
+
+    Future.delayed(duration, () {
+      if (mounted) {
+        setState(() {
+          showCircular = false; // hide loader
+          circularDone = true; // show text after Loading Progress
+          circulardownloadDone = true; // show text after download Progress
+        });
+
+        // Hide after 3s
+        Future.delayed(Duration(seconds: 3), () {
+          // hide text after 3s
+          if (mounted) {
+            setState(() {
+              circularDone = false; // hide text after Loading Progress
+              circulardownloadDone = false; // hide text after download Progress
+            });
+          }
+        });
+      }
+    });
+  }
+
+  // 🔹 Linear only
+  void _showLinearLoader(Duration duration) {// e.g., Duration(seconds: 6, milliseconds: 500)
+    setState(() {
+      showLinear = true; // show loader
+      linearDone = false; // reset
+      lineardownloadDone = false; // reset
+    });
+
+    Future.delayed(duration, () {
+      if (mounted) {
+        setState(() {
+          showLinear = false; // hide loader
+          linearDone = true; // show text after Loading Progress
+          lineardownloadDone = true; // show text after download Progress
+        });
+
+        Future.delayed(Duration(seconds: 3), () { // hide text after 3s
+          if (mounted) {
+            setState(() {
+              linearDone = false; // hide text after Loading Progress
+              lineardownloadDone = false; // hide text after download Progress
+            });
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('LOADER'),
+        backgroundColor: Color.fromARGB(255, 107, 130, 235),
+        foregroundColor: Colors.white,
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (!showCircular) // 👈 show button only if circular is hidden
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    showCircular = true; // hide button, show loader
+                  });
+                  _loading ? null : _startProgress();
+                  _showCircularLoader(
+                    Duration(seconds: 6, milliseconds: 500), // duration for circular loader
+                  ); //function call
+                },
+                child: Text("Show CircularProgressIndicator"), // button text
+              ),
+            SizedBox(height: 5), // spacing
+
+            if (showCircular) ...[ // 👈 show loader if true
+              Text(
+                "CircularProgressIndicator",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 15), // spacing
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center, // center content
+                children: [
+                  Text(
+                    "Indeterminate",
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 15), // spacing
+                  CircularProgressIndicator(
+                    color: const Color.fromARGB(255, 40, 231, 50),
+                    strokeWidth: 6.0,
+                    backgroundColor: const Color.fromARGB(255, 159, 245, 187),
+                  ),
+                  SizedBox(height: 10), // spacing
+                  Text(
+                    "Determinate",
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 15), // spacing
+                  CircularProgressIndicator(
+                    color: const Color.fromARGB(255, 40, 231, 50),
+                    strokeWidth: 6.0,
+                    backgroundColor: const Color.fromARGB(255, 159, 245, 187),
+                    value: _progressValue, //
+                  ),
+                ],
+              ),
+            ],
+
+            if (circularDone) ...[ // 👈 to  show complete text if the loader is done
+              SizedBox(height: 20), // spacing
+              Text(
+                "✅ Circular Loading Complete!",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+            ],
+
+            if (circulardownloadDone) ...[// 👈 to show text if the download is done
+              SizedBox(height: 20),
+              Text(
+                "✅ Circular Download Complete!",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+            ],
+
+            SizedBox(height: 30),
+            if (!showLinear) // 👈 show button only if linear is hidden
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    showLinear = true; // hide button, show loader
+                  });
+                  _loading ? null : _startProgress();
+                  _showLinearLoader(
+                    Duration(seconds: 6, milliseconds: 500), // duration for linear loader
+                  ); //function call
+                },
+                child: Text("Show LinearProgressIndicator"),
+              ),
+
+            SizedBox(height: 5), // spacing
+
+            if (showLinear) ...[  // 👈 show loader if true
+              Text(
+                "LinearProgressIndicator",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 15),
+              Text(
+                "Indeterminate",
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 5),
+              LinearProgressIndicator(
+                color: Colors.blue,
+                backgroundColor: const Color.fromARGB(255, 155, 195, 241),
+                minHeight: 15,
+              ),
+              SizedBox(height: 10),
+              Text(
+                "Determinate",
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 5),
+              LinearProgressIndicator(
+                color: Colors.blue,
+                backgroundColor: const Color.fromARGB(255, 155, 195, 241),
+                minHeight: 15,
+                value: _progressValue,
+              ),
+            ],
+
+            if (linearDone) ...[ // 👈 to show complete text if the loader is done
+              SizedBox(height: 20),
+              Text(
+                "✅ Linear Loading Complete!",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+            ],
+            if (lineardownloadDone) ...[ // 👈 to show text if the download is done
+              SizedBox(height: 20),
+              Text(
+                "✅ Linear Download Complete!",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
